@@ -5,6 +5,8 @@ use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Auth;
 use App\User;
+use Twilio\Rest\Verify;
+use Twilio\Rest\Client;
 use Validator;
 
 
@@ -16,7 +18,7 @@ class AuthController extends Controller
      * @return void
      */
     public function __construct() {
-        $this->middleware('auth:api', ['except' => ['login', 'register']]);
+        $this->middleware('auth:api', ['except' => ['login', 'register','sendOTP','verifyOTP','sendOTPlogin']]);
     }
 
     /**
@@ -25,9 +27,10 @@ class AuthController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
     public function login(Request $request){
+        error_log('in login');
     	$validator = Validator::make($request->all(), [
-            'first_name' => 'required',
-            'mobile_number' => 'required',
+            
+            
             'email' => 'required|email',
             'password' => 'required|string|min:6',
         ]);
@@ -49,11 +52,29 @@ class AuthController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
     public function register(Request $request) {
+        error_log('in register');
         $validator = Validator::make($request->all(), [
-            // 'name' => 'required|string|between:2,100',
+            'first_name' => 'required|string|between:2,100',
+            'last_name' => 'required|string|between:2,100',
+            'date_of_birth' => 'required',
+            'mobile_number' => 'required',
+            'gender' => 'required',
+            'state' => 'required',
+            'city' => 'required',
+            'district' => 'required',
+            'school' => 'required',
+            'bio' => 'required',
+            'class' => 'required',
+            'address' => 'required',
+            'school_board' => 'required',
+            'facebook_link' => 'required',
+            'instagram_link' => 'required',
+            'interest' => 'required',
+            'status' => 'required',
             'email' => 'required|string|email|max:100|unique:users',
             'password' => 'required|string|confirmed|min:6',
             'role' => 'required',
+            
         ]);
 
         if($validator->fails()){
@@ -116,5 +137,81 @@ class AuthController extends Controller
             'user' => auth()->user()
         ]);
     }
+
+    public function sendOTP(Request $request) {
+        error_log('in sendotp');
+        $phone_number = $request->mobile_number;
+        /* Get credentials from .env */
+        $token = getenv("TWILIO_AUTH_TOKEN");
+        $twilio_sid = getenv("TWILIO_SID");
+        $twilio_verify_sid = getenv("TWILIO_VERIFY_SID");
+        $twilio = new Client($twilio_sid, $token);
+        
+        try {
+            $twilio->verify->v2->services($twilio_verify_sid)
+                ->verifications
+                ->create($phone_number, "sms");
+        } catch (\Exception $ex) {
+            return response()->json(['error' => "OTP cannot be sent",$ex] );
+        }
+
+        return response()->json(['success' => "OTP has been sent"] );
+
+    }
+
+    public function verifyOTP(Request $request) {
+
+
+        $token = getenv("TWILIO_AUTH_TOKEN");
+        $twilio_sid = getenv("TWILIO_SID");
+        $twilio_verify_sid = getenv("TWILIO_VERIFY_SID");
+        $twilio = new Client($twilio_sid, $token);
+        $verification = $twilio->verify->v2->services($twilio_verify_sid)
+            ->verificationChecks
+            ->create($request->otp_code, array('to' => $request->mobile_number));
+
+        if ($verification->valid) {
+
+            $user = User::where('mobile_number', $request->mobile_number)->first();
+
+            if ($user) {
+                $insertOtp = User::where('mobile_number',$request->mobile_number)
+                                    ->update(['firebase_id'=>$request->otp_code]);
+            }
+
+            return response()->json(['success' => "OTP has been verified", 'phone_number' => $request->mobile_number, 'code' => $request->otp_code] );
+        }
+        return response()->json(['phone_number' => $request->mobile_number, 'error' => 'Invalid verification code entered!', 'code' => $request->otp_code] );
+
+    }
+
+    public function sendOTPlogin(Request $request) {
+
+        $phone_number = $request->mobile_number;
+        $user = User::where('mobile_number', $request->mobile_number)->first();
+        /* Get credentials from .env */
+        $token = getenv("TWILIO_AUTH_TOKEN");
+        $twilio_sid = getenv("TWILIO_SID");
+        $twilio_verify_sid = getenv("TWILIO_VERIFY_SID");
+
+        if($user) {
+            $twilio = new Client($twilio_sid, $token);
+
+            try {
+                $twilio->verify->v2->services($twilio_verify_sid)
+                    ->verifications
+                    ->create($phone_number, "sms");
+            } catch (\Exception $ex) {
+                return response()->json(['error' => "OTP cannot be sent",$ex] );
+            }
+    
+            return response()->json(['success' => "OTP has been sent"] );
+        }
+
+        return response()->json(['error' => "mobilenumber not register", 'phone_number' => $request->mobile_number] );
+        
+
+    }
+
 
 }

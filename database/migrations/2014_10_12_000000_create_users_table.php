@@ -18,7 +18,7 @@ class CreateUsersTable extends Migration
             $table->string('first_name');
             $table->string('last_name');
             $table->date('date_of_birth');
-            $table->integer('mobile_number');
+            $table->string('mobile_number')->unique();
             $table->string('gender');
             $table->string('state');
             $table->string('city');
@@ -31,6 +31,7 @@ class CreateUsersTable extends Migration
             $table->string('facebook_link');
             $table->string('instagram_link');
             $table->string('interest');
+            $table->string('status');
             $table->text('image')->nullable();
             $table->string('role');
             $table->string('has_child')->nullable();

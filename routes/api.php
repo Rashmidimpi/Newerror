@@ -16,6 +16,8 @@ use App\Http\Controllers\AuthController;
 |
 */
 
+// Route::post('/sendOTP', 'AuthController@sendOTP');
+
 Route::group([
     'middleware' => 'api',
     'prefix' => 'auth'
@@ -25,5 +27,9 @@ Route::group([
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
-    Route::get('/user-profile', [AuthController::class, 'userProfile']);    
+    Route::get('/user-profile', [AuthController::class, 'userProfile']);  
+    // Route::post('/sendOTP',['uses'=>'AuthController@sendOTP','as'=>'sendOTP']);
+    Route::post('/sendOTP', [AuthController::class, 'sendOTP']);  
+    Route::post('/sendOTPLogin',[AuthController::class, 'sendOTPlogin'] ); 
+    Route::post('/verifyOTP', [AuthController::class, 'verifyOTP']);  
 });
