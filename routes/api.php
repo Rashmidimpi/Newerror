@@ -4,6 +4,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\TestDetailController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,7 +17,6 @@ use App\Http\Controllers\AuthController;
 |
 */
 
-// Route::post('/sendOTP', 'AuthController@sendOTP');
 
 Route::group([
     'middleware' => 'api',
@@ -28,8 +28,13 @@ Route::group([
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
     Route::get('/user-profile', [AuthController::class, 'userProfile']);  
-    // Route::post('/sendOTP',['uses'=>'AuthController@sendOTP','as'=>'sendOTP']);
     Route::post('/sendOTP', [AuthController::class, 'sendOTP']);  
     Route::post('/sendOTPLogin',[AuthController::class, 'sendOTPlogin'] ); 
-    Route::post('/verifyOTP', [AuthController::class, 'verifyOTP']);  
+    Route::post('/verifyOTP', [AuthController::class, 'verifyOTP']); 
+    Route::post('/createTest', [TestDetailController::class, 'create_quiz']);  
+    // Route::post('/createTest', 'App\Http\Controllers\TestDetailController@create_quiz');
+    Route::post('/addQuestion', [TestDetailController::class, 'addQuestion']);  
+    Route::post('/gettestlist', [TestDetailController::class, 'getTestList']);  
+    Route::post('/getquestion', [TestDetailController::class, 'getQuestionList']);  
+    Route::get('/getTestDetails/{test_id}', [TestDetailController::class, 'getTestDetails']);  
 });
